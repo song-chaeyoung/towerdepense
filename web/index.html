@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tower Rush 🏰</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- 페이지 1: 메인 (MENU) -->
+    <section id="menu" class="overlay">
+      <div class="panel menu-panel">
+        <h1 class="logo">TOWER<span>RUSH</span></h1>
+        <p class="tagline">길목에 타워를 세워 밀려오는 적을 막아라!</p>
+        <!-- F-25 조작·규칙 힌트 -->
+        <p class="hint">빈 칸을 클릭해 타워 설치 · 웨이브 시작 버튼으로 적 소환 · 목숨 0이 되기 전에 모든 웨이브 방어</p>
+        <button id="start-btn" class="primary-btn">▶ 게임 시작</button>
+        <!-- F-30 최고 기록 -->
+        <p id="menu-best" class="best"></p>
+      </div>
+    </section>
+
+    <!-- 페이지 2: 게임 (PLAYING) -->
+    <section id="game-wrap" class="hidden">
+      <!-- F-24 상단 HUD -->
+      <div id="topbar">
+        <div class="stat"><span class="stat-ico">💰</span><b id="stat-gold">0</b><small>골드</small></div>
+        <div class="stat"><span class="stat-ico">❤️</span><b id="stat-lives">0</b><small>목숨</small></div>
+        <div class="stat"><span class="stat-ico">🌊</span><b id="stat-wave">0 / 0</b><small>웨이브</small></div>
+        <div class="stat"><span class="stat-ico">⭐</span><b id="stat-score">0</b><small>점수</small></div>
+      </div>
+
+      <div class="board-row">
+        <canvas id="board"></canvas>
+      </div>
+
+      <!-- 타워 선택 + 조작 바 -->
+      <div id="toolbar">
+        <div id="tower-buttons"></div>
+        <div class="controls">
+          <div id="tower-panel" class="hidden"></div>
+          <button id="speed-btn" class="ctrl-btn">⏩ 1배속</button>
+          <button id="wave-btn" class="ctrl-btn wave">▶ 웨이브 시작</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 페이지 3: 결과 (RESULT) -->
+    <section id="result" class="overlay hidden">
+      <div class="panel result-panel">
+        <h2 id="result-title">결과</h2>
+        <div id="result-summary"></div>
+        <div class="result-actions">
+          <button id="retry-btn" class="primary-btn">🔄 다시 하기</button>
+          <button id="share-btn" class="ghost-btn">🔗 결과 공유</button>
+        </div>
+      </div>
+    </section>
+
+    <div id="toast"></div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/game.js"></script>
+</body>
+</html>
