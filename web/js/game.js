@@ -56,8 +56,10 @@
     c >= 0 && c < COLS && r >= 0 && r < ROWS && !pathCells.has(c + ',' + r);
 
   // ── 게임 상태 ───────────────────────────────────────
+  const AUTO_NEXT_DELAY = 4; // 웨이브 클리어 후 다음 웨이브 자동 시작까지 대기(초)
   let state = 'MENU';
   let gold, lives, waveIndex, kills, waveActive, spawnQueue, spawnElapsed, gameSpeed;
+  let nextWaveTimer; // >0 이면 카운트다운 중
   let towers, enemies, projectiles, popups;
   let selectedTowerType = null; // 설치 모드
   let selectedTower = null;      // 선택된 설치 타워
@@ -72,6 +74,7 @@
     waveActive = false;
     spawnQueue = [];
     spawnElapsed = 0;
+    nextWaveTimer = 0;
     gameSpeed = 1;
     towers = [];
     enemies = [];
@@ -236,6 +239,7 @@
       t += 0.6; // 그룹 사이 간격
     });
     spawnElapsed = 0;
+    nextWaveTimer = 0;
     waveActive = true;
     updateHUD();
   }
@@ -254,6 +258,12 @@
 
   // ── 업데이트 루프 ───────────────────────────────────
   function update(dt) {
+    // 다음 웨이브 자동 시작 카운트다운
+    if (!waveActive && nextWaveTimer > 0) {
+      nextWaveTimer -= dt;
+      if (nextWaveTimer <= 0) { nextWaveTimer = 0; startWave(); }
+    }
+
     // 스폰
     if (waveActive && spawnQueue.length) {
       spawnElapsed += dt;
@@ -337,7 +347,8 @@
       if (waveIndex >= TOTAL_WAVES) { endGame(true); return; }
       const bonus = WAVE_CLEAR_BONUS + waveIndex * 5;
       gold += bonus;
-      toast(`웨이브 클리어! 보너스 +${bonus}골드`);
+      nextWaveTimer = AUTO_NEXT_DELAY; // 다음 웨이브 자동 시작 카운트다운
+      toast(`웨이브 클리어! 보너스 +${bonus}골드 · 곧 다음 웨이브`);
     }
     updateHUD();
   }
@@ -404,6 +415,9 @@
     } else if (waveIndex >= TOTAL_WAVES) {
       el.waveBtn.textContent = '완료';
       el.waveBtn.disabled = true;
+    } else if (nextWaveTimer > 0) {
+      el.waveBtn.textContent = `▶ 다음 웨이브 (${Math.ceil(nextWaveTimer)}s · 바로 시작)`;
+      el.waveBtn.disabled = false;
     } else {
       el.waveBtn.textContent = `▶ 웨이브 ${waveIndex + 1} 시작`;
       el.waveBtn.disabled = false;
