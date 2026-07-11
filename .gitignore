@@ -1,0 +1,11 @@
+# Python (word cloud script)
+.venv/
+__pycache__/
+*.pyc
+
+# OS
+.DS_Store
+
+# Editor
+.vscode/
+.idea/
