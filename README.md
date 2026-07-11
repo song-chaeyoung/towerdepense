@@ -19,6 +19,20 @@ cd web && python3 -m http.server 5173
 # → http://localhost:5173
 ```
 
+## 배포 (GitHub Pages)
+
+`master`에 반영되면 [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml)가 `web/`를
+GitHub Pages로 자동 배포합니다. 빌드 단계는 없습니다(정적 파일).
+
+**최초 1회 설정** — 저장소 **Settings → Pages → Build and deployment → Source**를
+**"GitHub Actions"** 로 지정하세요. 이후 `master` push마다 자동 배포됩니다.
+
+- 배포 주소: `https://song-chaeyoung.github.io/towerdepense/`
+- 경로가 상대 경로라 하위 경로(`/towerdepense/`)에서도 그대로 동작합니다.
+
+> 참고: private 저장소의 GitHub Pages 공개 게시는 유료 플랜이 필요할 수 있습니다.
+> 그 경우 저장소를 public으로 전환하거나 Netlify/Vercel/Cloudflare Pages에 `web/`를 올리면 됩니다.
+
 ## 개발 방식 (vibe-sprint)
 
 이 프로젝트는 [vibe-sprint](https://github.com/) 방식으로 기획되었습니다.
