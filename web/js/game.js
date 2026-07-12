@@ -23,6 +23,7 @@
     speedBtn: document.getElementById('speed-btn'),
     towerPanel: document.getElementById('tower-panel'),
     startBtn: document.getElementById('start-btn'),
+    difficulty: document.getElementById('difficulty'),
     menuBest: document.getElementById('menu-best'),
     resultTitle: document.getElementById('result-title'),
     resultSummary: document.getElementById('result-summary'),
@@ -60,6 +61,8 @@
   let state = 'MENU';
   let gold, lives, waveIndex, kills, waveActive, spawnQueue, spawnElapsed, gameSpeed;
   let nextWaveTimer; // >0 이면 카운트다운 중
+  let difficulty = DIFFICULTIES.normal;      // 현재 난이도
+  let selectedDiffKey = 'normal';            // 메인에서 고른 난이도
   let towers, enemies, projectiles, popups;
   let selectedTowerType = null; // 설치 모드
   let selectedTower = null;      // 선택된 설치 타워
@@ -67,8 +70,9 @@
   let lastTime = 0;
 
   function resetGame() {
-    gold = START_GOLD;
-    lives = START_LIVES;
+    difficulty = DIFFICULTIES[selectedDiffKey] || DIFFICULTIES.normal;
+    gold = difficulty.gold;
+    lives = difficulty.lives;
     waveIndex = 0;
     kills = 0;
     waveActive = false;
@@ -85,17 +89,25 @@
     el.speedBtn.textContent = '⏩ 1배속';
   }
 
-  // ── 최고 기록 (F-30) ────────────────────────────────
-  const BEST_KEY = 'towerRushBest';
-  function loadBest() {
-    try { return JSON.parse(localStorage.getItem(BEST_KEY)) || { wave: 0, score: 0 }; }
-    catch (e) { return { wave: 0, score: 0 }; }
+  // ── 최고 기록 (F-30) — 난이도별로 저장 ──────────────
+  const BEST_KEY = 'towerRushBestByDiff';
+  function loadAllBest() {
+    try { return JSON.parse(localStorage.getItem(BEST_KEY)) || {}; }
+    catch (e) { return {}; }
   }
-  function saveBest(wave, score) {
-    const b = loadBest();
-    const next = { wave: Math.max(b.wave, wave), score: Math.max(b.score, score) };
-    try { localStorage.setItem(BEST_KEY, JSON.stringify(next)); } catch (e) {}
-    return next;
+  function bestFor(diffKey) {
+    return loadAllBest()[diffKey] || { wave: 0, score: 0, cleared: false };
+  }
+  function saveBest(diffKey, wave, score, cleared) {
+    const all = loadAllBest();
+    const prev = all[diffKey] || { wave: 0, score: 0, cleared: false };
+    all[diffKey] = {
+      wave: Math.max(prev.wave, wave),
+      score: Math.max(prev.score, score),
+      cleared: prev.cleared || cleared,
+    };
+    try { localStorage.setItem(BEST_KEY, JSON.stringify(all)); } catch (e) {}
+    return all[diffKey];
   }
   function computeScore() {
     return kills * 10 + waveIndex * 100 + Math.max(0, lives) * 20;
@@ -108,11 +120,39 @@
     el.gameWrap.classList.toggle('hidden', next === 'MENU');
     el.result.classList.toggle('hidden', next !== 'RESULT');
     if (next === 'MENU') {
-      const b = loadBest();
-      el.menuBest.textContent = b.wave > 0
-        ? `최고 기록: ${b.wave}웨이브 · ${b.score}점`
-        : '아직 기록이 없어요. 첫 판을 플레이해 보세요!';
+      buildDifficultyButtons();
+      updateMenuBest();
     }
+  }
+
+  // 난이도 선택 UI (메인)
+  function buildDifficultyButtons() {
+    el.difficulty.innerHTML = '';
+    DIFFICULTY_ORDER.forEach((key) => {
+      const d = DIFFICULTIES[key];
+      const rec = bestFor(key);
+      const status = rec.cleared ? '클리어 ✓' : rec.wave > 0 ? `최고 ${rec.wave}웨이브` : '미클리어';
+      const btn = document.createElement('button');
+      btn.className = 'diff-btn' + (key === selectedDiffKey ? ' active' : '');
+      btn.dataset.key = key;
+      btn.innerHTML =
+        `<span class="df-name">${d.emoji} ${d.name}</span>` +
+        `<span class="df-meta">목숨 ${d.lives} · 골드 ${d.gold} · 적 ${Math.round(d.hpMul * 100)}%</span>` +
+        `<span class="df-status ${rec.cleared ? 'done' : ''}">${status}</span>`;
+      btn.addEventListener('click', () => {
+        selectedDiffKey = key;
+        buildDifficultyButtons();
+        updateMenuBest();
+      });
+      el.difficulty.appendChild(btn);
+    });
+  }
+  function updateMenuBest() {
+    const d = DIFFICULTIES[selectedDiffKey];
+    const rec = bestFor(selectedDiffKey);
+    el.menuBest.textContent = rec.wave > 0
+      ? `${d.emoji} ${d.name} 최고 기록: ${rec.wave}웨이브 · ${rec.score}점${rec.cleared ? ' · 클리어 ✓' : ''}`
+      : `${d.emoji} ${d.name} — 아직 기록이 없어요. 도전해 보세요!`;
   }
 
   // ── 토스트 알림 ─────────────────────────────────────
@@ -228,7 +268,10 @@
     if (waveActive || state !== 'PLAYING') return;
     if (waveIndex >= TOTAL_WAVES) return;
     const wave = WAVES[waveIndex];
-    const scale = hpScaleForWave(waveIndex);
+    // 난이도 체력 배율은 초반엔 약하게, 웨이브 5(index4)부터 100% 적용 → 어려움도 초반은 클리어 가능
+    const diffRamp = Math.min(1, waveIndex / 4);
+    const diffHp = 1 + (difficulty.hpMul - 1) * diffRamp;
+    const scale = hpScaleForWave(waveIndex) * diffHp;
     spawnQueue = [];
     let t = 0;
     wave.forEach((group) => {
@@ -246,11 +289,13 @@
 
   function spawnEnemy(type, scale) {
     const def = ENEMY_TYPES[type];
+    const hp = def.hp * scale;   // scale = 웨이브 스케일 × 난이도 체력 배율(램프 반영)
     enemies.push({
       type, color: def.color, radius: def.radius,
       x: WP[0].x, y: WP[0].y,
-      hp: def.hp * scale, maxHp: def.hp * scale,
-      speed: def.speed, reward: def.reward,
+      hp, maxHp: hp,
+      speed: def.speed * difficulty.speedMul,           // 난이도 속도 배율
+      reward: Math.max(1, Math.round(def.reward * difficulty.rewardMul)), // 난이도 보상 배율
       wpIndex: 0, dist: 0,
       slowTimer: 0, slowFactor: 1,
     });
@@ -390,15 +435,18 @@
 
   function endGame(won) {
     const score = computeScore();
-    const best = saveBest(waveIndex, score);
-    el.resultTitle.textContent = won ? '🏆 승리!' : '💀 게임 오버';
+    const best = saveBest(difficulty.key, waveIndex, score, won);
+    el.resultTitle.textContent = won
+      ? `🏆 ${difficulty.name} 클리어!`
+      : '💀 게임 오버';
     el.resultTitle.className = won ? 'win' : 'lose';
     el.resultSummary.innerHTML =
+      `<div class="rs-row"><span>난이도</span><b>${difficulty.emoji} ${difficulty.name}</b></div>` +
       `<div class="rs-row"><span>도달 웨이브</span><b>${Math.min(waveIndex + (won ? 0 : 1), TOTAL_WAVES)} / ${TOTAL_WAVES}</b></div>` +
       `<div class="rs-row"><span>처치한 적</span><b>${kills}</b></div>` +
       `<div class="rs-row"><span>남은 목숨</span><b>${Math.max(0, lives)}</b></div>` +
       `<div class="rs-row score"><span>점수</span><b>${score}</b></div>` +
-      `<div class="rs-best">최고 기록: ${best.wave}웨이브 · ${best.score}점</div>`;
+      `<div class="rs-best">${difficulty.emoji} ${difficulty.name} 최고: ${best.wave}웨이브 · ${best.score}점${best.cleared ? ' · 클리어 ✓' : ''}</div>`;
     el._lastScore = score;
     show('RESULT');
   }
@@ -454,14 +502,16 @@
     ctx.lineWidth = TILE * 0.62;
     ctx.stroke();
 
-    // 시작/도착 표시
-    ctx.fillStyle = '#8fd18f';
-    ctx.font = 'bold 13px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('▶ START', WP[0].x + 34, WP[0].y - 18);
+    // 시작/도착 표시 (가장자리에서 잘리지 않게 안쪽 정렬)
     const end = WP[WP.length - 1];
+    ctx.font = 'bold 13px sans-serif';
+    ctx.fillStyle = '#8fd18f';
+    ctx.textAlign = 'left';
+    ctx.fillText('▶ START', 8, WP[0].y - 14);
     ctx.fillStyle = '#ff8f8f';
-    ctx.fillText('END', end.x - 20, end.y - 18);
+    ctx.textAlign = 'right';
+    ctx.fillText('END ▶', MAP_W - 8, end.y - 14);
+    ctx.textAlign = 'center';
 
     // 호버 하이라이트 (F-08)
     if (hoverCell && selectedTowerType && state === 'PLAYING') {
@@ -601,10 +651,10 @@
     hoverCell = { c: Math.floor(p.x / TILE), r: Math.floor(p.y / TILE) };
   });
   canvas.addEventListener('mouseleave', () => { hoverCell = null; });
-  canvas.addEventListener('click', (e) => {
+
+  // 타일 탭/클릭 처리 (마우스·터치 공통)
+  function handleTap(c, r) {
     if (state !== 'PLAYING') return;
-    const p = canvasPos(e);
-    const c = Math.floor(p.x / TILE), r = Math.floor(p.y / TILE);
     const existing = towers.find((t) => t.col === c && t.row === r);
     if (selectedTowerType) {
       placeTower(c, r);
@@ -615,7 +665,34 @@
       selectedTower = null;
       refreshTowerPanel();
     }
+  }
+  canvas.addEventListener('click', (e) => {
+    const p = canvasPos(e);
+    handleTap(Math.floor(p.x / TILE), Math.floor(p.y / TILE));
   });
+
+  // 터치 조작: 손가락 위치에 사거리 미리보기/하이라이트 표시 후, 떼면 설치·선택 (F-05, F-07, F-08)
+  function touchCell(touch) {
+    const p = canvasPos({ clientX: touch.clientX, clientY: touch.clientY });
+    return { c: Math.floor(p.x / TILE), r: Math.floor(p.y / TILE) };
+  }
+  canvas.addEventListener('touchstart', (e) => {
+    if (state !== 'PLAYING') return;
+    e.preventDefault();
+    hoverCell = touchCell(e.touches[0]);
+  }, { passive: false });
+  canvas.addEventListener('touchmove', (e) => {
+    if (state !== 'PLAYING') return;
+    e.preventDefault();
+    hoverCell = touchCell(e.touches[0]);
+  }, { passive: false });
+  canvas.addEventListener('touchend', (e) => {
+    if (state !== 'PLAYING') return;
+    e.preventDefault();
+    const cell = touchCell(e.changedTouches[0]);
+    handleTap(cell.c, cell.r);
+    hoverCell = null; // 손을 떼면 미리보기 해제
+  }, { passive: false });
   // 우클릭으로 선택 해제
   canvas.addEventListener('contextmenu', (e) => {
     e.preventDefault();
@@ -648,7 +725,7 @@
   // 결과 공유 (F-31)
   el.shareBtn.addEventListener('click', async () => {
     const score = el._lastScore || 0;
-    const text = `Tower Rush에서 ${waveIndex}웨이브 · ${score}점 달성! 🏰`;
+    const text = `Tower Rush [${difficulty.name}]에서 ${waveIndex}웨이브 · ${score}점 달성! 🏰`;
     const url = location.href.split('?')[0];
     const shareData = { title: 'Tower Rush', text, url };
     try {

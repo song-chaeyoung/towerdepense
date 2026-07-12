@@ -4,23 +4,33 @@
  */
 
 // ── 맵 ────────────────────────────────────────────────
+// 모바일 친화: 정사각형에 가까운 15x14 격자 (세로 화면에서도 타일이 크게 보임)
 const TILE = 48;
-const COLS = 20;
-const ROWS = 12;
-const MAP_W = TILE * COLS; // 960
-const MAP_H = TILE * ROWS; // 576
+const COLS = 15;
+const ROWS = 14;
+const MAP_W = TILE * COLS; // 720
+const MAP_H = TILE * ROWS; // 672
 
-// 적이 지나가는 경로 (타일 좌표). 화면 밖 왼쪽에서 들어와 오른쪽으로 나간다. (F-03)
+// 적이 지나가는 경로 (타일 좌표). 좌상단에서 들어와 4개 레인을 지그재그로 지나 우하단으로 나간다. (F-03)
 const PATH_WAYPOINTS = [
-  [-1, 2], [3, 2], [3, 8], [8, 8], [8, 4],
-  [13, 4], [13, 9], [17, 9], [17, 2], [20, 2],
+  [-1, 1], [12, 1], [12, 4], [2, 4], [2, 7],
+  [12, 7], [12, 10], [2, 10], [2, 13], [15, 13],
 ];
 
-// ── 경제 초기값 ───────────────────────────────────────
+// ── 경제 초기값 (보통 난이도 기준) ────────────────────
 const START_GOLD = 120;
 const START_LIVES = 20;
 const SELL_RATIO = 0.6;          // 판매 시 환불 비율 (F-22)
 const WAVE_CLEAR_BONUS = 20;     // 웨이브 클리어 보너스 (F-20)
+
+// ── 난이도 ────────────────────────────────────────────
+// lives/gold: 시작값, hpMul/speedMul: 적 능력 배율, rewardMul: 처치 보상 배율
+const DIFFICULTIES = {
+  easy:   { key: 'easy',   name: '쉬움',   emoji: '🟢', lives: 25, gold: 150, hpMul: 0.85, speedMul: 1.0, rewardMul: 1.2 },
+  normal: { key: 'normal', name: '보통',   emoji: '🟡', lives: 20, gold: 120, hpMul: 1.0,  speedMul: 1.0, rewardMul: 1.0 },
+  hard:   { key: 'hard',   name: '어려움', emoji: '🔴', lives: 12, gold: 100, hpMul: 1.35, speedMul: 1.1, rewardMul: 0.9 },
+};
+const DIFFICULTY_ORDER = ['easy', 'normal', 'hard'];
 
 // ── 타워 종류 ─────────────────────────────────────────
 // range 는 타일 단위(픽셀 = range * TILE). (F-06, F-09)

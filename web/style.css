@@ -79,6 +79,36 @@ html, body {
 }
 .best { margin-top: 18px; font-size: 13px; color: var(--gold); }
 
+/* 난이도 선택 */
+.difficulty {
+  display: flex;
+  gap: 8px;
+  margin-top: 20px;
+}
+.diff-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: center;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px 8px;
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color 0.12s, background 0.12s, transform 0.08s;
+}
+.diff-btn:hover { background: #2f3446; }
+.diff-btn.active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(92, 200, 255, 0.3) inset;
+}
+.df-name { font-weight: 800; font-size: 15px; }
+.df-meta { font-size: 10px; color: var(--muted); line-height: 1.3; }
+.df-status { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.df-status.done { color: var(--gold); font-weight: 700; }
+
 .primary-btn {
   margin-top: 22px;
   background: linear-gradient(90deg, var(--accent), #3aa0e0);
@@ -107,7 +137,7 @@ html, body {
 /* ── 게임 화면 ── */
 #game-wrap {
   width: 100%;
-  max-width: 980px;
+  max-width: 760px;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -135,8 +165,8 @@ html, body {
 .board-row { display: flex; justify-content: center; }
 #board {
   width: 100%;
-  max-width: 960px;
-  aspect-ratio: 20 / 12;
+  max-width: 720px;
+  aspect-ratio: 15 / 14;
   height: auto;
   background: #243b1e;
   border: 1px solid var(--line);
@@ -271,8 +301,46 @@ html, body {
 }
 #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+/* 버튼 더블탭 확대 지연 제거 */
+button { touch-action: manipulation; }
+
 @media (max-width: 640px) {
-  .controls { width: 100%; justify-content: space-between; }
-  .tower-btn { min-width: 120px; flex: 1; }
+  #app { padding: 8px; } /* 세로·가로 모두 가운데 (base의 center 상속) */
+  #game-wrap { gap: 6px; }
+
+  /* 보드가 화면 비중을 더 갖도록 (UI는 컴팩트하게) */
+  #board { max-height: 68vh; }
+
+  /* HUD 압축 + 가운데 정렬 */
+  #topbar { padding: 7px 4px; gap: 0; border-radius: 10px; }
+  .stat {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 1px;
+  }
+  .stat + .stat { border-left: 1px solid var(--line); } /* 항목 구분선 */
+  .stat-ico { font-size: 13px; line-height: 1; }
+  .stat b { font-size: 15px; line-height: 1.1; }
+  .stat small { font-size: 9px; }
+
+  /* 타워 버튼: 2열 그리드, 컴팩트하게 */
+  #toolbar { flex-direction: column; gap: 6px; }
+  #tower-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; width: 100%; }
+  .tower-btn { min-width: 0; padding: 7px 9px; border-radius: 10px; }
+  .tb-dot { width: 10px; height: 10px; }
+  .tb-name { font-size: 12.5px; }
+  .tb-cost { font-size: 11.5px; }
+  .tb-desc { display: none; } /* 좁은 화면에선 설명 숨김 */
+
+  .controls { width: 100%; justify-content: stretch; gap: 6px; }
+  .ctrl-btn { flex: 1; padding: 10px 8px; font-size: 13px; border-radius: 10px; }
+  #tower-panel { width: 100%; justify-content: center; flex-wrap: wrap; padding: 6px 8px; }
+  #tower-panel button { font-size: 11.5px; padding: 7px 9px; }
+
   .logo { font-size: 42px; }
+  .difficulty { flex-direction: column; }
+  .diff-btn { flex-direction: row; justify-content: space-between; padding: 11px 14px; }
+  .df-meta { display: none; }
 }
