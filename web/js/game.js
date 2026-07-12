@@ -67,6 +67,9 @@
   let selectedTowerType = null; // 설치 모드
   let selectedTower = null;      // 선택된 설치 타워
   let hoverCell = null;
+  let hoverTower = null;         // 사거리 미리보기 대상 (데스크톱 hover / 모바일 꾹 누르기)
+  let pressTimer = null;         // 롱프레스 타이머
+  let longPressed = false;       // 롱프레스로 사거리 표시 중이면 탭 동작 소비
   let lastTime = 0;
 
   function resetGame() {
@@ -232,6 +235,7 @@
     gold += refund;
     towers = towers.filter((x) => x !== t);
     selectedTower = null;
+    if (hoverTower === t) hoverTower = null;
     refreshTowerPanel();
     updateHUD();
     toast(`판매 +${refund}골드`);
@@ -535,9 +539,20 @@
         drawRange(center.x, center.y, def.range * TILE, def.color);
       }
     }
+    // 호버/터치 중인 타일에 설치된 타워의 사거리 표시 (꾹 누르면 보임)
+    if (hoverCell && state === 'PLAYING') {
+      const held = towers.find((t) => t.col === hoverCell.c && t.row === hoverCell.r);
+      if (held && held !== selectedTower) {
+        drawRange(held.x, held.y, held.range, held.color);
+      }
+    }
     // 선택된 타워 사거리 (F-07)
     if (selectedTower) {
       drawRange(selectedTower.x, selectedTower.y, selectedTower.range, selectedTower.color);
+    }
+    // hover / 꾹 누르기 사거리 미리보기
+    if (hoverTower && hoverTower !== selectedTower) {
+      drawRange(hoverTower.x, hoverTower.y, hoverTower.range, hoverTower.color);
     }
 
     // 타워
@@ -655,11 +670,15 @@
     const sy = canvas.height / rect.height;
     return { x: (evt.clientX - rect.left) * sx, y: (evt.clientY - rect.top) * sy };
   }
+  const towerAt = (c, r) => towers.find((t) => t.col === c && t.row === r);
   canvas.addEventListener('mousemove', (e) => {
     const p = canvasPos(e);
-    hoverCell = { c: Math.floor(p.x / TILE), r: Math.floor(p.y / TILE) };
+    const c = Math.floor(p.x / TILE), r = Math.floor(p.y / TILE);
+    hoverCell = { c, r };
+    // 데스크톱: 설치 모드가 아닐 때 타워 위에 올리면 사거리 미리보기
+    hoverTower = (!selectedTowerType) ? (towerAt(c, r) || null) : null;
   });
-  canvas.addEventListener('mouseleave', () => { hoverCell = null; });
+  canvas.addEventListener('mouseleave', () => { hoverCell = null; hoverTower = null; });
 
   // 타일 탭/클릭 처리 (마우스·터치 공통)
   function handleTap(c, r) {
@@ -685,21 +704,40 @@
     const p = canvasPos({ clientX: touch.clientX, clientY: touch.clientY });
     return { c: Math.floor(p.x / TILE), r: Math.floor(p.y / TILE) };
   }
+  function clearPress() {
+    if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; }
+  }
   canvas.addEventListener('touchstart', (e) => {
     if (state !== 'PLAYING') return;
     e.preventDefault();
     hoverCell = touchCell(e.touches[0]);
+    longPressed = false;
+    // 꾹 누르기: 설치 모드가 아니고 타워 위면, 350ms 뒤 사거리 표시
+    const t = towerAt(hoverCell.c, hoverCell.r);
+    clearPress();
+    if (!selectedTowerType && t) {
+      pressTimer = setTimeout(() => { hoverTower = t; longPressed = true; }, 350);
+    }
   }, { passive: false });
   canvas.addEventListener('touchmove', (e) => {
     if (state !== 'PLAYING') return;
     e.preventDefault();
-    hoverCell = touchCell(e.touches[0]);
+    const cell = touchCell(e.touches[0]);
+    // 손가락이 다른 칸으로 이동하면 롱프레스 취소
+    if (!hoverCell || cell.c !== hoverCell.c || cell.r !== hoverCell.r) {
+      clearPress();
+      if (longPressed) { longPressed = false; hoverTower = null; }
+    }
+    hoverCell = cell;
   }, { passive: false });
   canvas.addEventListener('touchend', (e) => {
     if (state !== 'PLAYING') return;
     e.preventDefault();
+    clearPress();
     const cell = touchCell(e.changedTouches[0]);
-    handleTap(cell.c, cell.r);
+    // 롱프레스로 사거리만 보던 중이면 탭(설치/선택) 동작은 하지 않음
+    if (longPressed) { longPressed = false; hoverTower = null; }
+    else handleTap(cell.c, cell.r);
     hoverCell = null; // 손을 떼면 미리보기 해제
   }, { passive: false });
   // 우클릭으로 선택 해제
