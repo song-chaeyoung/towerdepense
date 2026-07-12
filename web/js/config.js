@@ -25,10 +25,11 @@ const WAVE_CLEAR_BONUS = 20;     // 웨이브 클리어 보너스 (F-20)
 
 // ── 난이도 ────────────────────────────────────────────
 // lives/gold: 시작값, hpMul/speedMul: 적 능력 배율, rewardMul: 처치 보상 배율
+// fastPack: 웨이브 3부터 빠른 적 추가 편성 (둔화·화력에 골드를 더 쓰게 압박)
 const DIFFICULTIES = {
-  easy:   { key: 'easy',   name: '쉬움',   emoji: '🟢', lives: 25, gold: 150, hpMul: 0.85, speedMul: 1.0, rewardMul: 1.2 },
-  normal: { key: 'normal', name: '보통',   emoji: '🟡', lives: 20, gold: 120, hpMul: 1.0,  speedMul: 1.0, rewardMul: 1.0 },
-  hard:   { key: 'hard',   name: '어려움', emoji: '🔴', lives: 12, gold: 100, hpMul: 1.35, speedMul: 1.1, rewardMul: 0.9 },
+  easy:   { key: 'easy',   name: '쉬움',   emoji: '🟢', lives: 25, gold: 150, hpMul: 0.85, speedMul: 1.0,  rewardMul: 1.2, fastPack: false },
+  normal: { key: 'normal', name: '보통',   emoji: '🟡', lives: 20, gold: 120, hpMul: 1.0,  speedMul: 1.0,  rewardMul: 1.0, fastPack: false },
+  hard:   { key: 'hard',   name: '어려움', emoji: '🔴', lives: 12, gold: 100, hpMul: 1.5,  speedMul: 1.15, rewardMul: 0.9, fastPack: true },
 };
 const DIFFICULTY_ORDER = ['easy', 'normal', 'hard'];
 
@@ -85,10 +86,11 @@ function towerStat(type, level) {
 
 // ── 적 종류 ───────────────────────────────────────────
 const ENEMY_TYPES = {
-  grunt:  { key: 'grunt',  name: '그런트', color: '#ff5d5d', hp: 46,  speed: 62,  reward: 8,  radius: 12 },
-  runner: { key: 'runner', name: '러너',   color: '#ffd93d', hp: 28,  speed: 120, reward: 7,  radius: 10 },
-  tank:   { key: 'tank',   name: '탱크',   color: '#a66bff', hp: 230, speed: 38,  reward: 22, radius: 16 },
-  swarm:  { key: 'swarm',  name: '스웜',   color: '#4dd599', hp: 16,  speed: 90,  reward: 4,  radius: 8  },
+  grunt:  { key: 'grunt',  name: '그런트', color: '#ff5d5d', hp: 46,  speed: 62,  reward: 8,   radius: 12 },
+  runner: { key: 'runner', name: '러너',   color: '#ffd93d', hp: 28,  speed: 120, reward: 7,   radius: 10 },
+  tank:   { key: 'tank',   name: '탱크',   color: '#a66bff', hp: 230, speed: 38,  reward: 22,  radius: 16 },
+  swarm:  { key: 'swarm',  name: '스웜',   color: '#4dd599', hp: 16,  speed: 90,  reward: 4,   radius: 8  },
+  boss:   { key: 'boss',   name: '보스',   color: '#ff3860', hp: 400, speed: 32,  reward: 100, radius: 20 },
 };
 
 // ── 웨이브 정의 (F-16, F-17) ──────────────────────────
@@ -105,11 +107,20 @@ const WAVES = [
   [{ type: 'swarm', count: 20, gap: 0.22 }, { type: 'runner', count: 8, gap: 0.4 }],
   [{ type: 'tank', count: 5, gap: 1.1 }, { type: 'grunt', count: 10, gap: 0.5 }],
   [{ type: 'runner', count: 18, gap: 0.3 }, { type: 'swarm', count: 18, gap: 0.22 }],
-  [{ type: 'tank', count: 8, gap: 0.85 }, { type: 'grunt', count: 14, gap: 0.4 }, { type: 'runner', count: 10, gap: 0.3 }],
+  // 최종 웨이브: 보스 + 호위
+  [{ type: 'boss', count: 2, gap: 3.0 }, { type: 'tank', count: 6, gap: 0.9 }, { type: 'grunt', count: 12, gap: 0.4 }, { type: 'runner', count: 10, gap: 0.3 }],
 ];
 const TOTAL_WAVES = WAVES.length;
 
-// 웨이브가 오를수록 적 체력 가중 (F-17)
+// 웨이브가 오를수록 적 체력 지수 가중 (F-17) — 12웨이브 기준 약 4.7배
 function hpScaleForWave(waveIndex) {
-  return 1 + waveIndex * 0.06;
+  return Math.pow(1.15, waveIndex);
+}
+// 후반 웨이브 속도 가산 (+2%/웨이브) — 둔화·배치의 중요도 상승
+function speedScaleForWave(waveIndex) {
+  return 1 + waveIndex * 0.02;
+}
+// 처치 보상 테이퍼 (-3%/웨이브, 하한 60%) — 후반 골드 눈덩이 완화
+function rewardScaleForWave(waveIndex) {
+  return Math.max(0.6, 1 - waveIndex * 0.03);
 }
