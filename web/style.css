@@ -79,6 +79,36 @@ html, body {
 }
 .best { margin-top: 18px; font-size: 13px; color: var(--gold); }
 
+/* 난이도 선택 */
+.difficulty {
+  display: flex;
+  gap: 8px;
+  margin-top: 20px;
+}
+.diff-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: center;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px 8px;
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color 0.12s, background 0.12s, transform 0.08s;
+}
+.diff-btn:hover { background: #2f3446; }
+.diff-btn.active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(92, 200, 255, 0.3) inset;
+}
+.df-name { font-weight: 800; font-size: 15px; }
+.df-meta { font-size: 10px; color: var(--muted); line-height: 1.3; }
+.df-status { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.df-status.done { color: var(--gold); font-weight: 700; }
+
 .primary-btn {
   margin-top: 22px;
   background: linear-gradient(90deg, var(--accent), #3aa0e0);
