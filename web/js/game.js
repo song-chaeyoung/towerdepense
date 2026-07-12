@@ -268,7 +268,10 @@
     if (waveActive || state !== 'PLAYING') return;
     if (waveIndex >= TOTAL_WAVES) return;
     const wave = WAVES[waveIndex];
-    const scale = hpScaleForWave(waveIndex);
+    // 난이도 체력 배율은 초반엔 약하게, 웨이브 5(index4)부터 100% 적용 → 어려움도 초반은 클리어 가능
+    const diffRamp = Math.min(1, waveIndex / 4);
+    const diffHp = 1 + (difficulty.hpMul - 1) * diffRamp;
+    const scale = hpScaleForWave(waveIndex) * diffHp;
     spawnQueue = [];
     let t = 0;
     wave.forEach((group) => {
@@ -286,7 +289,7 @@
 
   function spawnEnemy(type, scale) {
     const def = ENEMY_TYPES[type];
-    const hp = def.hp * scale * difficulty.hpMul;       // 난이도 체력 배율
+    const hp = def.hp * scale;   // scale = 웨이브 스케일 × 난이도 체력 배율(램프 반영)
     enemies.push({
       type, color: def.color, radius: def.radius,
       x: WP[0].x, y: WP[0].y,
