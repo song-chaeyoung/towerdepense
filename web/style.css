@@ -305,7 +305,7 @@ html, body {
 button { touch-action: manipulation; }
 
 @media (max-width: 640px) {
-  #app { padding: 8px; align-items: flex-start; }
+  #app { padding: 8px; } /* 세로·가로 모두 가운데 (base의 center 상속) */
   #game-wrap { gap: 6px; }
 
   /* 보드가 화면 비중을 더 갖도록 (UI는 컴팩트하게) */
