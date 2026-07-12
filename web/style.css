@@ -137,7 +137,7 @@ html, body {
 /* ── 게임 화면 ── */
 #game-wrap {
   width: 100%;
-  max-width: 980px;
+  max-width: 760px;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -165,8 +165,8 @@ html, body {
 .board-row { display: flex; justify-content: center; }
 #board {
   width: 100%;
-  max-width: 960px;
-  aspect-ratio: 20 / 12;
+  max-width: 720px;
+  aspect-ratio: 15 / 14;
   height: auto;
   background: #243b1e;
   border: 1px solid var(--line);
@@ -301,8 +301,34 @@ html, body {
 }
 #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+/* 버튼 더블탭 확대 지연 제거 */
+button { touch-action: manipulation; }
+
 @media (max-width: 640px) {
-  .controls { width: 100%; justify-content: space-between; }
-  .tower-btn { min-width: 120px; flex: 1; }
+  #app { padding: 8px; align-items: flex-start; }
+  #game-wrap { gap: 8px; }
+
+  /* 보드가 세로 화면을 다 먹지 않도록 높이 제한 → HUD·툴바가 항상 보이게 */
+  #board { max-height: 62vh; }
+
+  /* HUD 압축 */
+  #topbar { padding: 8px 10px; gap: 4px; }
+  .stat { flex-direction: column; gap: 0; }
+  .stat b { font-size: 17px; }
+  .stat small { font-size: 10px; }
+
+  /* 타워 버튼: 2열 그리드, 탭하기 크게 */
+  #toolbar { flex-direction: column; gap: 8px; }
+  #tower-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; width: 100%; }
+  .tower-btn { min-width: 0; padding: 10px; }
+  .tb-desc { display: none; } /* 좁은 화면에선 설명 숨김 */
+
+  .controls { width: 100%; justify-content: stretch; }
+  .ctrl-btn { flex: 1; padding: 14px 10px; }
+  #tower-panel { width: 100%; justify-content: center; flex-wrap: wrap; }
+
   .logo { font-size: 42px; }
+  .difficulty { flex-direction: column; }
+  .diff-btn { flex-direction: row; justify-content: space-between; padding: 12px 14px; }
+  .df-meta { display: none; }
 }

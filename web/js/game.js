@@ -646,10 +646,10 @@
     hoverCell = { c: Math.floor(p.x / TILE), r: Math.floor(p.y / TILE) };
   });
   canvas.addEventListener('mouseleave', () => { hoverCell = null; });
-  canvas.addEventListener('click', (e) => {
+
+  // 타일 탭/클릭 처리 (마우스·터치 공통)
+  function handleTap(c, r) {
     if (state !== 'PLAYING') return;
-    const p = canvasPos(e);
-    const c = Math.floor(p.x / TILE), r = Math.floor(p.y / TILE);
     const existing = towers.find((t) => t.col === c && t.row === r);
     if (selectedTowerType) {
       placeTower(c, r);
@@ -660,7 +660,34 @@
       selectedTower = null;
       refreshTowerPanel();
     }
+  }
+  canvas.addEventListener('click', (e) => {
+    const p = canvasPos(e);
+    handleTap(Math.floor(p.x / TILE), Math.floor(p.y / TILE));
   });
+
+  // 터치 조작: 손가락 위치에 사거리 미리보기/하이라이트 표시 후, 떼면 설치·선택 (F-05, F-07, F-08)
+  function touchCell(touch) {
+    const p = canvasPos({ clientX: touch.clientX, clientY: touch.clientY });
+    return { c: Math.floor(p.x / TILE), r: Math.floor(p.y / TILE) };
+  }
+  canvas.addEventListener('touchstart', (e) => {
+    if (state !== 'PLAYING') return;
+    e.preventDefault();
+    hoverCell = touchCell(e.touches[0]);
+  }, { passive: false });
+  canvas.addEventListener('touchmove', (e) => {
+    if (state !== 'PLAYING') return;
+    e.preventDefault();
+    hoverCell = touchCell(e.touches[0]);
+  }, { passive: false });
+  canvas.addEventListener('touchend', (e) => {
+    if (state !== 'PLAYING') return;
+    e.preventDefault();
+    const cell = touchCell(e.changedTouches[0]);
+    handleTap(cell.c, cell.r);
+    hoverCell = null; // 손을 떼면 미리보기 해제
+  }, { passive: false });
   // 우클릭으로 선택 해제
   canvas.addEventListener('contextmenu', (e) => {
     e.preventDefault();
