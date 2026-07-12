@@ -502,14 +502,16 @@
     ctx.lineWidth = TILE * 0.62;
     ctx.stroke();
 
-    // 시작/도착 표시
-    ctx.fillStyle = '#8fd18f';
-    ctx.font = 'bold 13px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('▶ START', WP[0].x + 34, WP[0].y - 18);
+    // 시작/도착 표시 (가장자리에서 잘리지 않게 안쪽 정렬)
     const end = WP[WP.length - 1];
+    ctx.font = 'bold 13px sans-serif';
+    ctx.fillStyle = '#8fd18f';
+    ctx.textAlign = 'left';
+    ctx.fillText('▶ START', 8, WP[0].y - 14);
     ctx.fillStyle = '#ff8f8f';
-    ctx.fillText('END', end.x - 20, end.y - 18);
+    ctx.textAlign = 'right';
+    ctx.fillText('END ▶', MAP_W - 8, end.y - 14);
+    ctx.textAlign = 'center';
 
     // 호버 하이라이트 (F-08)
     if (hoverCell && selectedTowerType && state === 'PLAYING') {

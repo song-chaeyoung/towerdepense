@@ -311,10 +311,18 @@ button { touch-action: manipulation; }
   /* 보드가 세로 화면을 다 먹지 않도록 높이 제한 → HUD·툴바가 항상 보이게 */
   #board { max-height: 62vh; }
 
-  /* HUD 압축 */
-  #topbar { padding: 8px 10px; gap: 4px; }
-  .stat { flex-direction: column; gap: 0; }
-  .stat b { font-size: 17px; }
+  /* HUD 압축 + 가운데 정렬 */
+  #topbar { padding: 10px 6px; gap: 0; }
+  .stat {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 2px;
+  }
+  .stat + .stat { border-left: 1px solid var(--line); } /* 항목 구분선 */
+  .stat-ico { font-size: 16px; line-height: 1; }
+  .stat b { font-size: 18px; line-height: 1.1; }
   .stat small { font-size: 10px; }
 
   /* 타워 버튼: 2열 그리드, 탭하기 크게 */
