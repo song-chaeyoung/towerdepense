@@ -271,12 +271,21 @@
     // 난이도 체력 배율은 초반엔 약하게, 웨이브 5(index4)부터 100% 적용 → 어려움도 초반은 클리어 가능
     const diffRamp = Math.min(1, waveIndex / 4);
     const diffHp = 1 + (difficulty.hpMul - 1) * diffRamp;
-    const scale = hpScaleForWave(waveIndex) * diffHp;
+    const mods = {
+      hp: hpScaleForWave(waveIndex) * diffHp,
+      speed: speedScaleForWave(waveIndex),
+      reward: rewardScaleForWave(waveIndex),
+    };
+    // 어려움: 웨이브 3부터 빠른 적 추가 편성 (fastPack)
+    const groups = wave.slice();
+    if (difficulty.fastPack && waveIndex >= 2) {
+      groups.push({ type: 'runner', count: 3 + Math.floor(waveIndex * 0.8), gap: 0.35 });
+    }
     spawnQueue = [];
     let t = 0;
-    wave.forEach((group) => {
+    groups.forEach((group) => {
       for (let i = 0; i < group.count; i++) {
-        spawnQueue.push({ type: group.type, at: t, scale });
+        spawnQueue.push({ type: group.type, at: t, mods });
         t += group.gap;
       }
       t += 0.6; // 그룹 사이 간격
@@ -287,15 +296,15 @@
     updateHUD();
   }
 
-  function spawnEnemy(type, scale) {
+  function spawnEnemy(type, mods) {
     const def = ENEMY_TYPES[type];
-    const hp = def.hp * scale;   // scale = 웨이브 스케일 × 난이도 체력 배율(램프 반영)
+    const hp = def.hp * mods.hp; // 웨이브 지수 스케일 × 난이도 체력 배율(램프 반영)
     enemies.push({
       type, color: def.color, radius: def.radius,
       x: WP[0].x, y: WP[0].y,
       hp, maxHp: hp,
-      speed: def.speed * difficulty.speedMul,           // 난이도 속도 배율
-      reward: Math.max(1, Math.round(def.reward * difficulty.rewardMul)), // 난이도 보상 배율
+      speed: def.speed * difficulty.speedMul * mods.speed,
+      reward: Math.max(1, Math.round(def.reward * difficulty.rewardMul * mods.reward)),
       wpIndex: 0, dist: 0,
       slowTimer: 0, slowFactor: 1,
     });
@@ -314,7 +323,7 @@
       spawnElapsed += dt;
       while (spawnQueue.length && spawnQueue[0].at <= spawnElapsed) {
         const s = spawnQueue.shift();
-        spawnEnemy(s.type, s.scale);
+        spawnEnemy(s.type, s.mods);
       }
     }
 
