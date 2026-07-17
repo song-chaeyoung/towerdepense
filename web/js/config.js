@@ -30,7 +30,7 @@ const DIFFICULTIES = {
   easy:   { key: 'easy',   name: '쉬움',   emoji: '🟢', lives: 25, gold: 150, hpMul: 0.85, speedMul: 1.0,  rewardMul: 1.2,  fastPack: false, rampWaves: 4, hpGrowth: 1.15, bossMul: 1.0 },
   normal: { key: 'normal', name: '보통',   emoji: '🟡', lives: 20, gold: 120, hpMul: 1.0,  speedMul: 1.0,  rewardMul: 1.0,  fastPack: false, rampWaves: 4, hpGrowth: 1.15, bossMul: 1.0 },
   hard:   { key: 'hard',   name: '어려움', emoji: '🔴', lives: 12, gold: 100, hpMul: 1.5,  speedMul: 1.15, rewardMul: 0.9,  fastPack: true,  rampWaves: 4, hpGrowth: 1.15, bossMul: 1.0 },
-  hell:   { key: 'hell',   name: '헬',     emoji: '💀', lives: 6,  gold: 90,  hpMul: 2.2,  speedMul: 1.3,  rewardMul: 0.7,  fastPack: true,  rampWaves: 1, hpGrowth: 1.22, bossMul: 1.6 },
+  hell:   { key: 'hell',   name: '헬',     emoji: '💀', lives: 10, gold: 110, hpMul: 1.55, speedMul: 1.15, rewardMul: 0.9,  fastPack: true,  rampWaves: 4, hpGrowth: 1.15, bossMul: 1.4 },
 };
 const DIFFICULTY_ORDER = ['easy', 'normal', 'hard', 'hell'];
 
