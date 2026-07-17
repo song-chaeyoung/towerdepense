@@ -273,10 +273,10 @@
     if (waveIndex >= TOTAL_WAVES) return;
     const wave = WAVES[waveIndex];
     // 난이도 체력 배율은 초반엔 약하게, 웨이브 5(index4)부터 100% 적용 → 어려움도 초반은 클리어 가능
-    const diffRamp = Math.min(1, waveIndex / 4);
+    const diffRamp = Math.min(1, waveIndex / (difficulty.rampWaves || 4));
     const diffHp = 1 + (difficulty.hpMul - 1) * diffRamp;
     const mods = {
-      hp: hpScaleForWave(waveIndex) * diffHp,
+      hp: hpScaleForWave(waveIndex, difficulty.hpGrowth) * diffHp,
       speed: speedScaleForWave(waveIndex),
       reward: rewardScaleForWave(waveIndex),
     };
@@ -302,7 +302,8 @@
 
   function spawnEnemy(type, mods) {
     const def = ENEMY_TYPES[type];
-    const hp = def.hp * mods.hp; // 웨이브 지수 스케일 × 난이도 체력 배율(램프 반영)
+    const bossExtra = (type === 'boss') ? (difficulty.bossMul || 1) : 1;
+    const hp = def.hp * mods.hp * bossExtra; // 웨이브 지수 스케일 × 난이도 체력 배율(램프) × 보스 배율
     enemies.push({
       type, color: def.color, radius: def.radius,
       x: WP[0].x, y: WP[0].y,

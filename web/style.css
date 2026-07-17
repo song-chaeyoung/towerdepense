@@ -109,6 +109,11 @@ html, body {
 .df-status { font-size: 11px; color: var(--muted); margin-top: 2px; }
 .df-status.done { color: var(--gold); font-weight: 700; }
 
+/* 헬 난이도 경고 강조 */
+.diff-btn[data-key="hell"] .df-name { color: #ff4d6d; }
+.diff-btn[data-key="hell"] { border-color: #5a2230; }
+.diff-btn[data-key="hell"].active { border-color: #ff4d6d; box-shadow: 0 0 0 2px rgba(255, 77, 109, 0.35) inset; }
+
 .primary-btn {
   margin-top: 22px;
   background: linear-gradient(90deg, var(--accent), #3aa0e0);

@@ -27,11 +27,12 @@ const WAVE_CLEAR_BONUS = 20;     // 웨이브 클리어 보너스 (F-20)
 // lives/gold: 시작값, hpMul/speedMul: 적 능력 배율, rewardMul: 처치 보상 배율
 // fastPack: 웨이브 3부터 빠른 적 추가 편성 (둔화·화력에 골드를 더 쓰게 압박)
 const DIFFICULTIES = {
-  easy:   { key: 'easy',   name: '쉬움',   emoji: '🟢', lives: 25, gold: 150, hpMul: 0.85, speedMul: 1.0,  rewardMul: 1.2, fastPack: false },
-  normal: { key: 'normal', name: '보통',   emoji: '🟡', lives: 20, gold: 120, hpMul: 1.0,  speedMul: 1.0,  rewardMul: 1.0, fastPack: false },
-  hard:   { key: 'hard',   name: '어려움', emoji: '🔴', lives: 12, gold: 100, hpMul: 1.5,  speedMul: 1.15, rewardMul: 0.9, fastPack: true },
+  easy:   { key: 'easy',   name: '쉬움',   emoji: '🟢', lives: 25, gold: 150, hpMul: 0.85, speedMul: 1.0,  rewardMul: 1.2,  fastPack: false, rampWaves: 4, hpGrowth: 1.15, bossMul: 1.0 },
+  normal: { key: 'normal', name: '보통',   emoji: '🟡', lives: 20, gold: 120, hpMul: 1.0,  speedMul: 1.0,  rewardMul: 1.0,  fastPack: false, rampWaves: 4, hpGrowth: 1.15, bossMul: 1.0 },
+  hard:   { key: 'hard',   name: '어려움', emoji: '🔴', lives: 12, gold: 100, hpMul: 1.5,  speedMul: 1.15, rewardMul: 0.9,  fastPack: true,  rampWaves: 4, hpGrowth: 1.15, bossMul: 1.0 },
+  hell:   { key: 'hell',   name: '헬',     emoji: '💀', lives: 6,  gold: 90,  hpMul: 2.2,  speedMul: 1.3,  rewardMul: 0.7,  fastPack: true,  rampWaves: 1, hpGrowth: 1.22, bossMul: 1.6 },
 };
-const DIFFICULTY_ORDER = ['easy', 'normal', 'hard'];
+const DIFFICULTY_ORDER = ['easy', 'normal', 'hard', 'hell'];
 
 // ── 타워 종류 ─────────────────────────────────────────
 // range 는 타일 단위(픽셀 = range * TILE). (F-06, F-09)
@@ -112,9 +113,9 @@ const WAVES = [
 ];
 const TOTAL_WAVES = WAVES.length;
 
-// 웨이브가 오를수록 적 체력 지수 가중 (F-17) — 12웨이브 기준 약 4.7배
-function hpScaleForWave(waveIndex) {
-  return Math.pow(1.15, waveIndex);
+// 웨이브가 오를수록 적 체력 지수 가중 (F-17). growth는 난이도별 (기본 1.15)
+function hpScaleForWave(waveIndex, growth) {
+  return Math.pow(growth || 1.15, waveIndex);
 }
 // 후반 웨이브 속도 가산 (+2%/웨이브) — 둔화·배치의 중요도 상승
 function speedScaleForWave(waveIndex) {
